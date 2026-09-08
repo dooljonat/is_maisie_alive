@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Is Maisie Alive?{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Karla:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/static/style.css?v={{ css_v }}">
+  <link rel="icon" href="/static/maisie-logo.jpg">
+</head>
+<body>
+  <header class="site-header">
+    <a href="/" aria-hidden="true" tabindex="-1"><img class="site-logo" src="/static/maisie-logo.jpg" alt=""></a>
+    <a class="site-title" href="/">ismaisiealive<span>.org</span></a>
+    <p class="site-tagline">A daily accountability blog for one (1) pug, demanded by one (1) nervous father.</p>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <p>Operated by a paid professional dogsitter.</p>
+    <p>Compensation: one forgiven Zelle of an amount no one can remember.</p>
+    {% if is_admin is defined and is_admin %}
+      <p><a href="/admin">admin</a> · <a href="/admin/logout">log out</a></p>
+    {% else %}
+      <p><a href="/admin/login">staff entrance</a></p>
+    {% endif %}
+  </footer>
+</body>
+</html>

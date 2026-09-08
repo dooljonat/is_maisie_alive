@@ -1,0 +1,474 @@
+/* ismaisiealive.net — pug proof-of-life dispatch blog.
+   Mobile-first; the whole site is one narrow vertical column. */
+
+:root {
+  --paper: #f2efe9;      /* warm grey, leaning toward pug-fawn */
+  --card: #fdfcf9;
+  --ink: #241f18;
+  --ink-soft: #6d6459;
+  --line: #ddd5c8;
+  --fawn: #c99e61;       /* the coat */
+  --alive: #1e8a4c;      /* the verdict */
+  --alive-soft: #e2f2e8;
+  --tongue: #d94f78;     /* the tongue */
+  --warn: #b0791f;
+  --warn-soft: #f5ecd8;
+  --danger: #b23a3a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Karla", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+main, .site-header, .site-footer {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+a { color: var(--tongue); }
+
+/* ---------------------------------------------------------------- header */
+
+.site-header { padding-top: 28px; text-align: center; }
+
+.site-logo {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--fawn);
+  display: block;
+  margin: 0 auto 10px;
+}
+
+.site-title {
+  font-family: "Archivo Black", "Arial Black", sans-serif;
+  font-size: 1.7rem;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+.site-title span { color: var(--fawn); }
+
+.site-tagline {
+  margin: 6px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  font-style: italic;
+  text-wrap: balance;
+}
+
+/* ---------------------------------------------------------------- status */
+
+.status {
+  margin: 24px 0 32px;
+  padding: 24px 20px 26px;
+  text-align: center;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  box-shadow: 5px 5px 0 var(--fawn);
+}
+
+.status-question {
+  margin: 0;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--ink-soft);
+}
+
+.status-verdict {
+  margin: 8px 0 10px;
+  font-family: "Archivo Black", "Arial Black", sans-serif;
+  font-size: clamp(3.2rem, 18vw, 4.6rem);
+  line-height: 1;
+  transform: rotate(-2deg);
+}
+.status--alive .status-verdict { color: var(--alive); }
+.status--stale .status-verdict,
+.status--unknown .status-verdict { color: var(--warn); font-size: clamp(2rem, 11vw, 2.8rem); }
+
+.status-detail { margin: 0; color: var(--ink-soft); font-size: 0.95rem; text-wrap: balance; }
+
+/* ----------------------------------------------------------------- posts */
+
+.post {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 20px 18px;
+  margin-bottom: 24px;
+}
+
+.post-kicker {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.75rem;
+}
+.post-day {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 2px 8px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.post-date { color: var(--ink-soft); }
+
+.post-title {
+  font-family: "Archivo Black", "Arial Black", sans-serif;
+  font-size: 1.35rem;
+  margin: 10px 0 6px;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.post-body { margin: 0 0 4px; }
+
+/* ------------------------------------------------------------- checklist */
+
+.checklist { margin-top: 14px; }
+
+/* Collapsed by default: the count is the headline, the list is on demand. */
+.checklist-heading {
+  margin: 0;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+.checklist-heading::-webkit-details-marker { display: none; }
+.checklist-summary-text { flex: none; }
+.checklist-heading::after {
+  content: "▸";
+  flex: none;
+  order: 3;
+  color: var(--tongue);
+  font-size: 0.9rem;
+}
+.checklist[open] .checklist-heading::after { content: "▾"; }
+.checklist-heading:focus-visible { outline: 2px solid var(--tongue); outline-offset: 2px; }
+
+/* Progress bar fills the gap between the count and the show/hide affordance. */
+.checklist-progress {
+  flex: 1;
+  min-width: 24px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+  order: 2;
+}
+.checklist-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--alive);
+  border-radius: 999px;
+}
+.checklist[open] ul { margin-top: 6px; }
+.checklist-perfect {
+  color: var(--alive);
+  border: 1px solid var(--alive);
+  border-radius: 999px;
+  padding: 1px 8px;
+  margin-left: 6px;
+}
+
+.checklist ul { list-style: none; margin: 0; padding: 0; }
+.checklist li {
+  display: flex;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 0.95rem;
+}
+.checklist li:last-child { border-bottom: 0; }
+.checklist .tick { font-family: "IBM Plex Mono", monospace; width: 1em; flex: none; }
+.checklist-label { flex: 1; min-width: 0; }
+.check-time {
+  flex: none;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--alive);
+  font-variant-numeric: tabular-nums;
+  align-self: center;
+}
+.checklist .done .tick { color: var(--alive); font-weight: 700; }
+.checklist .pending { color: var(--ink-soft); }
+
+/* ---------------------------------------------------------------- photos */
+
+.photo { margin: 18px 0 0; }
+
+/* Previews share one 4:3 silhouette so portrait phone shots don't dominate
+   the scroll; tapping opens the untouched original. */
+.photo-link {
+  display: block;
+  position: relative;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  line-height: 0;
+}
+.photo-link img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+.photo-zoom {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  background: rgba(36, 31, 24, 0.72);
+  color: #fff;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  padding: 5px 8px;
+  border-radius: 999px;
+}
+.photo-link:focus-visible { outline: 2px solid var(--tongue); outline-offset: 2px; }
+.photo figcaption { padding-top: 8px; }
+.photo-caption { margin: 0 0 2px; font-weight: 700; }
+.photo-meta {
+  margin: 0;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.badge {
+  display: inline-block;
+  margin: 6px 0 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.badge--verified { background: var(--alive-soft); color: var(--alive); }
+.badge--mismatch { background: var(--warn-soft); color: var(--warn); }
+.badge--noexif   { background: #ece7ef; color: #6b5a82; }
+
+/* -------------------------------------------------------------- comments */
+
+.comments { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+
+.comments-heading {
+  margin: 0 0 8px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+}
+
+.comment { padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.comment:last-of-type { border-bottom: 0; }
+.comment-meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.comment-meta strong { color: var(--ink); }
+.comment-body { margin: 2px 0 0; overflow-wrap: anywhere; }
+
+.comment-form-wrap { margin-top: 10px; }
+.comment-form-wrap summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--tongue);
+}
+.comment-form { margin-top: 10px; }
+
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+.emoji-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.emoji-btn {
+  font-size: 1.2rem;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--card);
+  cursor: pointer;
+}
+.emoji-btn:hover { background: var(--warn-soft); }
+
+/* ---------------------------------------------------------------- footer */
+
+.site-footer {
+  padding: 32px 16px 48px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+.site-footer p { margin: 2px 0; }
+
+.empty { text-align: center; color: var(--ink-soft); padding: 40px 0; }
+
+/* ----------------------------------------------------------- forms & admin */
+
+.stack { display: flex; flex-direction: column; gap: 12px; }
+
+label { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 0.9rem; }
+
+input[type="text"], input[type="password"], textarea, input[type="file"] {
+  font: inherit;
+  font-weight: 400;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ink);
+}
+input:focus-visible, textarea:focus-visible, button:focus-visible {
+  outline: 2px solid var(--tongue);
+  outline-offset: 2px;
+}
+
+.btn {
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 16px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+.btn--primary { background: var(--alive); border-color: var(--alive); color: #fff; }
+.btn--ghost { border-color: var(--line); font-weight: 400; }
+.btn--danger {
+  border-color: var(--danger);
+  color: var(--danger);
+  padding: 4px 10px;
+  align-self: center;
+}
+.btn--small { padding: 2px 8px; font-size: 0.75rem; border-width: 1px; }
+
+.post-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.post-actions form { display: inline; }
+
+.login { padding-top: 32px; }
+.login h1, .admin h1 {
+  font-family: "Archivo Black", "Arial Black", sans-serif;
+  font-size: 1.5rem;
+  margin: 0 0 4px;
+}
+.login-sub { color: var(--ink-soft); margin-top: 0; }
+.login-error {
+  background: #f7e2e2;
+  color: var(--danger);
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.admin { padding-top: 24px; }
+.admin-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+
+.admin-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+.admin-card-heading {
+  margin: 0 0 12px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+}
+
+.admin-checklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.check-btn {
+  font: inherit;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+}
+.check-btn.is-done {
+  background: var(--alive-soft);
+  border-color: var(--alive);
+  text-decoration: line-through;
+  color: var(--ink-soft);
+}
+.check-btn .tick { flex: none; }
+.check-btn.is-done .tick { color: var(--alive); }
+
+.hint { font-size: 0.8rem; color: var(--ink-soft); font-style: italic; }
+
+.camera-toggle {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.admin-photos { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.admin-photos li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px;
+}
+.admin-photos img { width: 56px; height: 56px; object-fit: cover; border-radius: 4px; flex: none; }
+.admin-photo-info { flex: 1; min-width: 0; }
+.admin-photo-info p { margin: 0; overflow-wrap: anywhere; }
+
+.admin-recent { list-style: none; margin: 0; padding: 0; font-size: 0.85rem; color: var(--ink-soft); display: flex; flex-direction: column; gap: 6px; }
+.admin-recent li { display: flex; align-items: center; gap: 8px; }
+.admin-recent li span { flex: 1; min-width: 0; }
+
+.admin-foot { text-align: center; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .status-verdict { animation: stamp 0.35s ease-out; }
+  @keyframes stamp {
+    from { transform: rotate(-2deg) scale(1.6); opacity: 0; }
+    to   { transform: rotate(-2deg) scale(1); opacity: 1; }
+  }
+}

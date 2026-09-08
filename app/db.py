@@ -1,0 +1,133 @@
+from datetime import date, datetime
+
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, String, Text, create_engine
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    mapped_column,
+    relationship,
+    sessionmaker,
+)
+
+from . import config
+
+engine = create_engine(config.DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+
+# The dad-mandated duties, verbatim where it counts.
+DEFAULT_CHECKLIST = [
+    "Let Maisie into my room (per The Text)",
+    "Did NOT leave her in the pen the whole time (also per The Text)",
+    "Breakfast served",
+    "Lunch served",
+    "Dinner served",
+    "Gave medicine",
+    "Water bowl: full",
+    "Walk / neighborhood sniff patrol",
+    "Pee peed",
+    "Poo poo'd",
+    "Visual confirmation: still alive",
+]
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Post(Base):
+    __tablename__ = "posts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    day: Mapped[date] = mapped_column(Date, unique=True, index=True)
+    title: Mapped[str] = mapped_column(String(200))
+    body: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=config.local_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=config.local_now, onupdate=config.local_now
+    )
+
+    checklist: Mapped[list["ChecklistItem"]] = relationship(
+        back_populates="post", cascade="all, delete-orphan", order_by="ChecklistItem.id"
+    )
+    photos: Mapped[list["Photo"]] = relationship(
+        back_populates="post", cascade="all, delete-orphan", order_by="Photo.uploaded_at"
+    )
+    comments: Mapped[list["Comment"]] = relationship(
+        back_populates="post", cascade="all, delete-orphan", order_by="Comment.created_at"
+    )
+
+    @property
+    def done_count(self) -> int:
+        return sum(1 for item in self.checklist if item.done)
+
+    @property
+    def latest_activity(self) -> datetime:
+        times = [self.updated_at or self.created_at]
+        times += [p.uploaded_at for p in self.photos]
+        return max(times)
+
+
+class ChecklistItem(Base):
+    __tablename__ = "checklist_items"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), index=True)
+    label: Mapped[str] = mapped_column(String(300))
+    done: Mapped[bool] = mapped_column(Boolean, default=False)
+    checked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    post: Mapped[Post] = relationship(back_populates="checklist")
+
+
+class Photo(Base):
+    __tablename__ = "photos"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), index=True)
+    filename: Mapped[str] = mapped_column(String(120))
+    caption: Mapped[str] = mapped_column(Text, default="")
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=config.local_now)
+    taken_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    verified: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    post: Mapped[Post] = relationship(back_populates="photos")
+
+    @property
+    def verification_status(self) -> str:
+        """One of: 'verified', 'mismatch', 'no_exif'."""
+        if self.taken_at is None:
+            return "no_exif"
+        return "verified" if self.verified else "mismatch"
+
+
+class Comment(Base):
+    __tablename__ = "comments"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), index=True)
+    author: Mapped[str] = mapped_column(String(60))
+    body: Mapped[str] = mapped_column(String(1000))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=config.local_now)
+
+    post: Mapped[Post] = relationship(back_populates="comments")
+
+
+def init_db() -> None:
+    Base.metadata.create_all(engine)
+    # Lightweight migration: create_all doesn't add columns to existing tables,
+    # so databases from before checklist timestamps need the column bolted on.
+    with engine.connect() as conn:
+        from sqlalchemy import text
+
+        cols = [row[1] for row in conn.execute(text("PRAGMA table_info(checklist_items)"))]
+        if "checked_at" not in cols:
+            conn.execute(text("ALTER TABLE checklist_items ADD COLUMN checked_at DATETIME"))
+            conn.commit()
+
+
+def get_session():
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()

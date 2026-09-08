@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Staff Entrance — Is Maisie Alive?{% endblock %}
+
+{% block content %}
+<section class="login">
+  <h1>Staff entrance</h1>
+  <p class="login-sub">Authorized dogsitting personnel only. Dad, go back to the homepage and refresh it like everyone else.</p>
+  {% if error %}<p class="login-error">{{ error }}</p>{% endif %}
+  <form method="post" action="/admin/login" class="stack">
+    <label>Username
+      <input type="text" name="username" autocomplete="username" required>
+    </label>
+    <label>Password
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button type="submit" class="btn btn--primary">Clock in</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,7 @@
+ismaisiealive.org {
+	reverse_proxy 127.0.0.1:8000
+}
+
+www.ismaisiealive.org {
+	redir https://ismaisiealive.org{uri} permanent
+}

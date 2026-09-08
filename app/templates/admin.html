@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Dispatch Desk — Is Maisie Alive?{% endblock %}
+
+{% block content %}
+<section class="admin">
+  <div class="admin-top">
+    <h1>Dispatch desk</h1>
+    <a class="btn btn--ghost" href="/">view site</a>
+  </div>
+
+  {% if not post %}
+    <div class="admin-card">
+      <p>No dispatch filed for <strong>{{ today | longdate }}</strong> yet. Dad is pacing.</p>
+      <form method="post" action="/admin/posts/today">
+        <button type="submit" class="btn btn--primary">Start today's post</button>
+      </form>
+    </div>
+  {% else %}
+    <div class="admin-card">
+      <p class="admin-card-heading">Today's dispatch · {{ post.day | longdate }}</p>
+      <form method="post" action="/admin/posts/{{ post.id }}/update" class="stack">
+        <label>Title
+          <input type="text" name="title" value="{{ post.title }}" required>
+        </label>
+        <label>Report
+          <textarea name="body" rows="4" placeholder="What did Maisie accomplish today? Snoring counts.">{{ post.body }}</textarea>
+        </label>
+        <button type="submit" class="btn">Save post</button>
+      </form>
+    </div>
+
+    <div class="admin-card">
+      <p class="admin-card-heading">Duties · {{ post.done_count }}/{{ post.checklist | length }}</p>
+      <ul class="admin-checklist">
+        {% for item in post.checklist %}
+        <li>
+          <form method="post" action="/admin/checklist/{{ item.id }}/toggle">
+            <button type="submit" class="check-btn {{ 'is-done' if item.done }}">
+              <span class="tick">{{ '✓' if item.done else '○' }}</span>
+              <span class="checklist-label">{{ item.label }}</span>
+              {% if item.done and item.checked_at %}<span class="check-time">{{ item.checked_at | clock }}</span>{% endif %}
+            </button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="admin-card">
+      <p class="admin-card-heading">Submit evidence</p>
+      <form method="post" action="/admin/posts/{{ post.id }}/photos" enctype="multipart/form-data" class="stack">
+        <label>Photos (select one or several)
+          <input type="file" id="photo-input" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
+        </label>
+        <label class="camera-toggle"><input type="checkbox" id="camera-toggle"> Open camera directly (skip the photo library)</label>
+        <label>Caption (applies to every photo in this batch — upload one at a time for individual captions)
+          <input type="text" name="caption" placeholder="e.g., Maisie surveying her domain (the couch)">
+        </label>
+        <button type="submit" class="btn">Upload proof of life</button>
+      </form>
+      <p class="hint">Tip: upload straight from the camera roll — screenshots lose their metadata and the site will publicly accuse you of recycling footage.</p>
+      <script>
+        document.getElementById("camera-toggle").addEventListener("change", (e) => {
+          const input = document.getElementById("photo-input");
+          if (e.target.checked) input.setAttribute("capture", "environment");
+          else input.removeAttribute("capture");
+        });
+
+        // Don't let a typed-but-unsaved report get lost to another form's submit.
+        const postForm = document.querySelector('form[action$="/update"]');
+        if (postForm) {
+          let dirty = false;
+          postForm.addEventListener("input", () => { dirty = true; });
+          postForm.addEventListener("submit", () => { dirty = false; });
+          document.querySelectorAll('form:not([action$="/update"])').forEach((f) => {
+            f.addEventListener("submit", (e) => {
+              if (dirty && !confirm("You typed a report but haven't hit Save post — it will be LOST if you continue. Continue anyway?")) {
+                e.preventDefault();
+              }
+            });
+          });
+        }
+      </script>
+
+      {% if post.photos %}
+      <ul class="admin-photos">
+        {% for photo in post.photos %}
+        <li>
+          <img src="/uploads/{{ photo.filename }}" alt="">
+          <div class="admin-photo-info">
+            <p>{{ photo.caption or "(no caption)" }}</p>
+            <p class="photo-meta">{{ photo.uploaded_at | clock }} · {{ photo.verification_status }}</p>
+          </div>
+          <form method="post" action="/admin/photos/{{ photo.id }}/delete">
+            <button type="submit" class="btn btn--danger" aria-label="Delete photo">✕</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if recent %}
+  <div class="admin-card">
+    <p class="admin-card-heading">Recent dispatches</p>
+    <ul class="admin-recent">
+      {% for p in recent %}
+      <li>
+        <span>{{ p.day | longdate }} — {{ p.title }} · {{ p.done_count }}/{{ p.checklist | length }} duties · {{ p.photos | length }} photo{{ 's' if p.photos | length != 1 }}</span>
+        <a class="btn btn--ghost btn--small" href="/admin/posts/{{ p.id }}/edit">edit</a>
+        <form method="post" action="/admin/posts/{{ p.id }}/delete"
+              onsubmit="return confirm('Really delete the {{ p.day | longdate }} dispatch? This erases the post, its checklist, its photos, and its comments.')">
+          <button type="submit" class="btn btn--danger btn--small" aria-label="Delete post">✕</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <p class="admin-foot"><a href="/admin/logout">Clock out</a></p>
+</section>
+{% endblock %}

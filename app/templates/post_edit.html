@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Editing {{ post.day | longdate }} — Is Maisie Alive?{% endblock %}
+
+{% block content %}
+<section class="admin">
+  <div class="admin-top">
+    <h1>Editing dispatch</h1>
+    <a class="btn btn--ghost" href="/admin">back to desk</a>
+  </div>
+
+  <div class="admin-card">
+    <p class="admin-card-heading">{{ post.day | longdate }}</p>
+    <form method="post" action="/admin/posts/{{ post.id }}/update" class="stack">
+      <label>Title
+        <input type="text" name="title" value="{{ post.title }}" required>
+      </label>
+      <label>Report
+        <textarea name="body" rows="4">{{ post.body }}</textarea>
+      </label>
+      <button type="submit" class="btn">Save post</button>
+    </form>
+  </div>
+
+  <div class="admin-card">
+    <p class="admin-card-heading">Duties · {{ post.done_count }}/{{ post.checklist | length }}</p>
+    <ul class="admin-checklist">
+      {% for item in post.checklist %}
+      <li>
+        <form method="post" action="/admin/checklist/{{ item.id }}/toggle">
+          <button type="submit" class="check-btn {{ 'is-done' if item.done }}">
+            <span class="tick">{{ '✓' if item.done else '○' }}</span>
+            <span class="checklist-label">{{ item.label }}</span>
+            {% if item.done and item.checked_at %}<span class="check-time">{{ item.checked_at | clock }}</span>{% endif %}
+          </button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="admin-card">
+    <p class="admin-card-heading">Photos</p>
+    <form method="post" action="/admin/posts/{{ post.id }}/photos" enctype="multipart/form-data" class="stack">
+      <label>Photos (select one or several)
+        <input type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
+      </label>
+      <label>Caption (applies to every photo in this batch)
+        <input type="text" name="caption">
+      </label>
+      <button type="submit" class="btn">Upload</button>
+    </form>
+
+    {% if post.photos %}
+    <ul class="admin-photos">
+      {% for photo in post.photos %}
+      <li>
+        <img src="/uploads/{{ photo.filename }}" alt="">
+        <div class="admin-photo-info">
+          <p>{{ photo.caption or "(no caption)" }}</p>
+          <p class="photo-meta">{{ photo.uploaded_at | clock }} · {{ photo.verification_status }}</p>
+        </div>
+        <form method="post" action="/admin/photos/{{ photo.id }}/delete">
+          <button type="submit" class="btn btn--danger" aria-label="Delete photo">✕</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+
+  <div class="admin-card">
+    <p class="admin-card-heading">Danger zone</p>
+    <form method="post" action="/admin/posts/{{ post.id }}/delete"
+          onsubmit="return confirm('Really delete the {{ post.day | longdate }} dispatch? This erases the post, its checklist, its photos, and its comments. Dad will notice the gap in the record.')">
+      <button type="submit" class="btn btn--danger">Delete this post</button>
+    </form>
+  </div>
+
+  <script>
+    // Don't let a typed-but-unsaved report get lost to another form's submit.
+    const postForm = document.querySelector('form[action$="/update"]');
+    let dirty = false;
+    postForm.addEventListener("input", () => { dirty = true; });
+    postForm.addEventListener("submit", () => { dirty = false; });
+    document.querySelectorAll('form:not([action$="/update"])').forEach((f) => {
+      f.addEventListener("submit", (e) => {
+        if (dirty && !confirm("You typed a report but haven't hit Save post — it will be LOST if you continue. Continue anyway?")) {
+          e.preventDefault();
+        }
+      });
+    });
+  </script>
+</section>
+{% endblock %}
