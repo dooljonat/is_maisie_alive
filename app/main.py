@@ -1,3 +1,4 @@
+import random
 import uuid
 from datetime import date, datetime
 from pathlib import Path
@@ -12,6 +13,7 @@ from sqlalchemy.orm import Session
 from . import auth, config, exif_check
 from .db import (
     DEFAULT_CHECKLIST,
+    DEFAULT_TITLES,
     ChecklistItem,
     Comment,
     Photo,
@@ -198,7 +200,7 @@ def create_today_post(request: Request, db: Session = Depends(get_session)):
         return r
     today = config.local_now().date()
     if not db.scalar(select(Post).where(Post.day == today)):
-        post = Post(day=today, title="Maisie remains alive", body="")
+        post = Post(day=today, title=random.choice(DEFAULT_TITLES), body="")
         post.checklist = [ChecklistItem(label=label) for label in DEFAULT_CHECKLIST]
         db.add(post)
         db.commit()

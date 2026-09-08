@@ -14,6 +14,29 @@ from . import config
 engine = create_engine(config.DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
+# Default post titles. A new dispatch picks one at random, because writing
+# "Maisie remains alive" 14 days in a row is its own kind of cry for help.
+DEFAULT_TITLES = [
+    "Maisie remains alive",
+    "Yep, still alive",
+    "Maisie is, in fact, still alive",
+    "Still alive. Still snoring.",
+    "Update: pug operational",
+    "No news, which is the good kind",
+    "Alive, unimpressed",
+    "Vital signs: aggressively normal",
+    "The pug endures",
+    "Another day, another unremarkable pug",
+    "She lives. She judges.",
+    "Confirmed: not dead",
+    "Breathing, as usual",
+    "Maisie: 1, Entropy: 0",
+    "Status quo maintained",
+    "All limbs accounted for",
+    "Suspiciously fine",
+    "Yes, Dad. She's fine.",
+]
+
 # The dad-mandated duties, verbatim where it counts.
 DEFAULT_CHECKLIST = [
     "Let Maisie into my room (per The Text)",
