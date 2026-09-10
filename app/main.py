@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from . import auth, config, exif_check
+from . import auth, config, exif_check, spam_filter
 from .db import (
     DEFAULT_CHECKLIST,
     DEFAULT_TITLES,
@@ -117,14 +117,31 @@ def add_comment(
     post = db.get(Post, post_id)
     author = author.strip()[:60]
     body = body.strip()[:1000]
-    if post and author and body and not website:
-        db.add(Comment(post_id=post.id, author=author, body=body))
-        db.commit()
+    if not (post and author and body) or website:
+        return RedirectResponse(f"/#post-{post_id}", status_code=303)
+
+    # SEO/marketing bots found the site. Drop their pitches on arrival; the
+    # sender sees the same redirect either way, so there's nothing to probe.
+    is_spam, reason = spam_filter.check(author, body)
+    if is_spam:
+        print(f"[spam blocked] {author!r} ({reason}): {body[:80]!r}", flush=True)
+        return RedirectResponse(f"/#post-{post_id}", status_code=303)
+
+    db.add(Comment(post_id=post.id, author=author, body=body))
+    db.commit()
     return RedirectResponse(f"/#post-{post_id}", status_code=303)
 
 
-# Note: there is deliberately no comment-delete route. Guest comments are an
-# immutable public record — the management cannot silence its critics.
+@app.post("/admin/comments/{comment_id}/delete")
+def delete_comment(request: Request, comment_id: int, db: Session = Depends(get_session)):
+    """Spam removal only — kept narrow so real criticism stays on the record."""
+    if r := _guard(request):
+        return r
+    comment = db.get(Comment, comment_id)
+    if comment:
+        db.delete(comment)
+        db.commit()
+    return _back(request)
 
 
 # ---------------------------------------------------------------------- auth

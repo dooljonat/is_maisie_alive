@@ -472,3 +472,16 @@ input:focus-visible, textarea:focus-visible, button:focus-visible {
     to   { transform: rotate(-2deg) scale(1); opacity: 1; }
   }
 }
+
+.comment-delete { margin-left: auto; }
+.comment-delete button {
+  font: inherit;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.65rem;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  background: none;
+  border-radius: 3px;
+  cursor: pointer;
+  padding: 1px 6px;
+}
