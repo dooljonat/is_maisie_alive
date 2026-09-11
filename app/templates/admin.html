@@ -119,6 +119,30 @@
   </div>
   {% endif %}
 
+  <div class="admin-card">
+    <p class="admin-card-heading">Comment moderation</p>
+    {% if comments %}
+    <p class="hint">Deleting is permanent and has no undo. It's for spam the filter missed — not for
+      criticism you'd rather Dad didn't see.</p>
+    <ul class="admin-comments">
+      {% for c in comments %}
+      <li>
+        <div class="admin-comment-info">
+          <p class="photo-meta">{{ c.author }} · {{ c.created_at | since }}</p>
+          <p>{{ c.body }}</p>
+        </div>
+        <form method="post" action="/admin/comments/{{ c.id }}/delete" class="comment-delete-form"
+          onsubmit="return confirm('Permanently delete this comment by {{ c.author }}?\n\n{{ c.body[:120] }}\n\nThere is no undo.')">
+          <button type="submit" class="btn btn--danger btn--small" aria-label="Delete comment">✕</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="hint">No comments yet.</p>
+    {% endif %}
+  </div>
+
   <p class="admin-foot"><a href="/admin/logout">Clock out</a></p>
 </section>
 {% endblock %}

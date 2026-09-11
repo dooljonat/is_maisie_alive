@@ -206,8 +206,13 @@ def admin_dashboard(request: Request, db: Session = Depends(get_session)):
     today = config.local_now().date()
     post = db.scalar(select(Post).where(Post.day == today))
     recent = db.scalars(select(Post).order_by(Post.day.desc()).limit(14)).all()
+    comments = db.scalars(
+        select(Comment).order_by(Comment.created_at.desc()).limit(30)
+    ).all()
     return templates.TemplateResponse(
-        request, "admin.html", {"post": post, "today": today, "recent": recent}
+        request,
+        "admin.html",
+        {"post": post, "today": today, "recent": recent, "comments": comments},
     )
 
 

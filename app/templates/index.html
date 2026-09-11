@@ -83,14 +83,7 @@
     </p>
     {% for comment in post.comments %}
     <div class="comment">
-      <div class="comment-meta"><strong>{{ comment.author }}</strong> · {{ comment.created_at | since }}
-        {% if is_admin %}
-        <form class="comment-delete" method="post" action="/admin/comments/{{ comment.id }}/delete"
-          onsubmit="return confirm('Delete this comment from {{ comment.author }}? Use this for spam, not for criticism you don&apos;t like.')">
-          <button type="submit" aria-label="Delete comment as spam">spam ✕</button>
-        </form>
-        {% endif %}
-      </div>
+      <div class="comment-meta"><strong>{{ comment.author }}</strong> · {{ comment.created_at | since }}</div>
       <p class="comment-body">{{ comment.body }}</p>
     </div>
     {% endfor %}
