@@ -53,22 +53,47 @@
     </ul>
   </details>
 
-  {% for photo in post.photos %}
-  <figure class="photo">
-    <a class="photo-link" href="/uploads/{{ photo.filename }}" target="_blank" rel="noopener"
-      aria-label="Open full-size photo">
-      <img src="/uploads/{{ photo.filename }}" alt="{{ photo.caption or 'Maisie, alive' }}" loading="lazy">
-      <span class="photo-zoom" aria-hidden="true">⤢ full size</span>
-    </a>
+  {% for batch in post.photo_batches %}
+  {% set lead = batch[0] %}
+  <figure class="photo{% if batch | length > 1 %} photo--carousel{% endif %}"
+    {% if batch | length > 1 %}data-carousel{% endif %}>
+    <div class="carousel-frame">
+      <div class="carousel-track">
+        {% for photo in batch %}
+        <a class="photo-link" href="/uploads/{{ photo.filename }}" target="_blank" rel="noopener"
+          aria-label="Open full-size photo{% if batch | length > 1 %} {{ loop.index }} of {{ batch | length }}{% endif %}">
+          <img src="/uploads/{{ photo.filename }}" alt="{{ photo.caption or 'Maisie, alive' }}" loading="lazy">
+          <span class="photo-zoom" aria-hidden="true">⤢ full size</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% if batch | length > 1 %}
+      <button type="button" class="carousel-arrow carousel-arrow--prev" data-dir="-1"
+        aria-label="Previous photo">‹</button>
+      <button type="button" class="carousel-arrow carousel-arrow--next" data-dir="1"
+        aria-label="Next photo">›</button>
+      <span class="carousel-count" aria-hidden="true"><span class="carousel-index">1</span>/{{ batch | length }}</span>
+      {% endif %}
+    </div>
     <figcaption>
-      {% if photo.caption %}<p class="photo-caption">{{ photo.caption }}</p>{% endif %}
+      {% if lead.caption %}<p class="photo-caption">{{ lead.caption }}</p>{% endif %}
       <p class="photo-meta">
-        uploaded {{ photo.uploaded_at | clock }} · {{ photo.uploaded_at | since }}
+        uploaded {{ lead.uploaded_at | clock }} · {{ lead.uploaded_at | since }}
+        {% if batch | length > 1 %} · {{ batch | length }} photos{% endif %}
       </p>
-      {% if photo.verification_status == 'verified' %}
-      <p class="badge badge--verified">📷 timestamp verified — taken {{ photo.taken_at | clock }}, fresh evidence</p>
-      {% elif photo.verification_status == 'mismatch' %}
-      <p class="badge badge--mismatch">🕰 taken {{ photo.taken_at | clock }} — recycled footage? the court will decide
+      {% if batch | length > 1 %}
+      {% set verified_count = batch | selectattr('verification_status', 'equalto', 'verified') | list | length %}
+      {% if verified_count == batch | length %}
+      <p class="badge badge--verified">📷 all {{ batch | length }} timestamps verified — fresh evidence</p>
+      {% elif verified_count %}
+      <p class="badge badge--mismatch">🕰 {{ verified_count }} of {{ batch | length }} verified — the rest are under review</p>
+      {% else %}
+      <p class="badge badge--noexif">🕵️ no camera metadata — screenshots? conspiracy? you decide</p>
+      {% endif %}
+      {% elif lead.verification_status == 'verified' %}
+      <p class="badge badge--verified">📷 timestamp verified — taken {{ lead.taken_at | clock }}, fresh evidence</p>
+      {% elif lead.verification_status == 'mismatch' %}
+      <p class="badge badge--mismatch">🕰 taken {{ lead.taken_at | clock }} — recycled footage? the court will decide
       </p>
       {% else %}
       <p class="badge badge--noexif">🕵️ no camera metadata — screenshot? conspiracy? you decide</p>
@@ -110,4 +135,47 @@
   </section>
 </article>
 {% endfor %}
+
+<script>
+  // Arrows scroll the snap track one frame; the counter follows the scroll,
+  // so swiping and tapping stay in sync.
+  document.querySelectorAll("[data-carousel]").forEach((fig) => {
+    const track = fig.querySelector(".carousel-track");
+    const index = fig.querySelector(".carousel-index");
+    const prev = fig.querySelector(".carousel-arrow--prev");
+    const next = fig.querySelector(".carousel-arrow--next");
+    const count = track.children.length;
+
+    const current = () =>
+      Math.max(0, Math.min(count - 1, Math.round(track.scrollLeft / track.clientWidth)));
+    const sync = () => {
+      const i = current();
+      index.textContent = i + 1;
+      prev.disabled = i <= 0;
+      next.disabled = i >= count - 1;
+    };
+
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    fig.querySelectorAll(".carousel-arrow").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = Math.max(0, Math.min(count - 1, current() + Number(btn.dataset.dir)));
+        const left = target * track.clientWidth;
+        // Some engines ignore smooth scrolling on a snap container, so fall
+        // back to an instant jump when the animated scroll doesn't land.
+        track.scrollTo(smooth ? { left, behavior: "smooth" } : { left });
+        setTimeout(() => {
+          if (Math.abs(track.scrollLeft - left) > 4) track.scrollLeft = left;
+          sync();
+        }, 320);
+      });
+    });
+
+    track.addEventListener("scroll", () => {
+      clearTimeout(track._t);
+      track._t = setTimeout(sync, 80);
+    });
+    sync();
+  });
+</script>
 {% endblock %}

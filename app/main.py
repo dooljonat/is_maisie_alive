@@ -287,6 +287,8 @@ async def upload_photos(
 
     # Each file gets its own EXIF timestamp check; a shared caption (if any)
     # applies to the whole batch. Bad files are skipped, good ones still land.
+    # One batch id per upload groups the results into a single carousel.
+    batch_id = uuid.uuid4().hex[:16]
     for file in files:
         ext = Path(file.filename or "").suffix.lower()
         if ext not in config.ALLOWED_EXTENSIONS:
@@ -312,6 +314,7 @@ async def upload_photos(
                 uploaded_at=uploaded_at,
                 taken_at=taken_at,
                 verified=verified,
+                batch_id=batch_id,
             )
         )
         post.updated_at = uploaded_at

@@ -222,6 +222,59 @@ a { color: var(--tongue); }
 
 /* Previews share one 4:3 silhouette so portrait phone shots don't dominate
    the scroll; tapping opens the untouched original. */
+/* Same-batch photos ride one horizontal scroll-snap track. Without JS it's
+   still a swipeable gallery; the arrows just scroll it a frame at a time. */
+.carousel-frame { position: relative; }
+.carousel-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  border-radius: 4px;
+}
+.carousel-track::-webkit-scrollbar { display: none; }
+.carousel-track > .photo-link {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(36, 31, 24, 0.62);
+  color: #fff;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 3px;
+}
+.carousel-arrow--prev { left: 8px; }
+.carousel-arrow--next { right: 8px; }
+.carousel-arrow[disabled] { opacity: 0.25; cursor: default; }
+.carousel-arrow:focus-visible { outline: 2px solid var(--tongue); outline-offset: 2px; }
+
+.carousel-count {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(36, 31, 24, 0.72);
+  color: #fff;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.65rem;
+  line-height: 1;
+  padding: 4px 7px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
 .photo-link {
   display: block;
   position: relative;
@@ -250,6 +303,8 @@ a { color: var(--tongue); }
   border-radius: 999px;
 }
 .photo-link:focus-visible { outline: 2px solid var(--tongue); outline-offset: 2px; }
+/* Arrows own the mid-edges in a carousel, so the zoom pill moves out of reach. */
+.photo--carousel .photo-zoom { right: auto; left: 8px; bottom: 8px; }
 .photo figcaption { padding-top: 8px; }
 .photo-caption { margin: 0 0 2px; font-weight: 700; }
 .photo-meta {

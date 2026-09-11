@@ -73,7 +73,8 @@ class Post(Base):
         back_populates="post", cascade="all, delete-orphan", order_by="ChecklistItem.id"
     )
     photos: Mapped[list["Photo"]] = relationship(
-        back_populates="post", cascade="all, delete-orphan", order_by="Photo.uploaded_at"
+        back_populates="post", cascade="all, delete-orphan",
+        order_by="Photo.uploaded_at.desc(), Photo.id.desc()"
     )
     comments: Mapped[list["Comment"]] = relationship(
         back_populates="post", cascade="all, delete-orphan", order_by="Comment.created_at"
@@ -82,6 +83,25 @@ class Post(Base):
     @property
     def done_count(self) -> int:
         return sum(1 for item in self.checklist if item.done)
+
+    @property
+    def photo_batches(self) -> list[list["Photo"]]:
+        """Photos grouped into upload batches, newest batch first.
+
+        Each batch renders as one carousel under a shared caption. Photos
+        predating batch ids (batch_id None) each stand alone.
+        """
+        batches: list[list[Photo]] = []
+        for photo in self.photos:
+            if (
+                batches
+                and photo.batch_id is not None
+                and batches[-1][0].batch_id == photo.batch_id
+            ):
+                batches[-1].append(photo)
+            else:
+                batches.append([photo])
+        return batches
 
     @property
     def latest_activity(self) -> datetime:
@@ -112,6 +132,8 @@ class Photo(Base):
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=config.local_now)
     taken_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Photos uploaded together share a batch id and display as one carousel.
+    batch_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
 
     post: Mapped[Post] = relationship(back_populates="photos")
 
@@ -145,6 +167,11 @@ def init_db() -> None:
         cols = [row[1] for row in conn.execute(text("PRAGMA table_info(checklist_items)"))]
         if "checked_at" not in cols:
             conn.execute(text("ALTER TABLE checklist_items ADD COLUMN checked_at DATETIME"))
+            conn.commit()
+
+        photo_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(photos)"))]
+        if "batch_id" not in photo_cols:
+            conn.execute(text("ALTER TABLE photos ADD COLUMN batch_id VARCHAR(32)"))
             conn.commit()
 
 
