@@ -134,6 +134,8 @@ class Photo(Base):
     verified: Mapped[bool] = mapped_column(Boolean, default=False)
     # Photos uploaded together share a batch id and display as one carousel.
     batch_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    # SHA-256 of the file, so a double-submitted upload isn't stored twice.
+    content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
     post: Mapped[Post] = relationship(back_populates="photos")
 
@@ -172,6 +174,9 @@ def init_db() -> None:
         photo_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(photos)"))]
         if "batch_id" not in photo_cols:
             conn.execute(text("ALTER TABLE photos ADD COLUMN batch_id VARCHAR(32)"))
+            conn.commit()
+        if "content_hash" not in photo_cols:
+            conn.execute(text("ALTER TABLE photos ADD COLUMN content_hash VARCHAR(64)"))
             conn.commit()
 
 

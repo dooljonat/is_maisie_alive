@@ -89,6 +89,18 @@
         }
       });
     });
+  
+        // A big photo upload on a phone can take a while; disable the button so
+        // an impatient second tap can't submit the same batch again.
+        document.querySelectorAll('form[enctype="multipart/form-data"]').forEach((f) => {
+          f.addEventListener("submit", () => {
+            const btn = f.querySelector('button[type="submit"]');
+            if (btn) {
+              btn.disabled = true;
+              btn.textContent = "Uploading\u2026";
+            }
+          });
+        });
   </script>
 </section>
 {% endblock %}

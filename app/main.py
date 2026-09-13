@@ -1,3 +1,4 @@
+import hashlib
 import random
 import uuid
 from datetime import date, datetime
@@ -289,6 +290,11 @@ async def upload_photos(
     # applies to the whole batch. Bad files are skipped, good ones still land.
     # One batch id per upload groups the results into a single carousel.
     batch_id = uuid.uuid4().hex[:16]
+    # A slow upload on a phone invites a second tap (or a back-and-resubmit),
+    # which used to land the same photos twice. Skip anything already stored.
+    existing_digests = {
+        p.content_hash for p in post.photos if p.content_hash is not None
+    }
     for file in files:
         ext = Path(file.filename or "").suffix.lower()
         if ext not in config.ALLOWED_EXTENSIONS:
@@ -296,6 +302,11 @@ async def upload_photos(
         contents = await file.read()
         if not contents or len(contents) > config.MAX_UPLOAD_BYTES:
             continue
+
+        digest = hashlib.sha256(contents).hexdigest()
+        if digest in existing_digests:
+            continue
+        existing_digests.add(digest)
 
         filename = f"{uuid.uuid4().hex}{ext}"
         dest = config.UPLOAD_DIR / filename
@@ -315,6 +326,7 @@ async def upload_photos(
                 taken_at=taken_at,
                 verified=verified,
                 batch_id=batch_id,
+                content_hash=digest,
             )
         )
         post.updated_at = uploaded_at
