@@ -549,3 +549,14 @@ input:focus-visible, textarea:focus-visible, button:focus-visible {
 .admin-comment-info { flex: 1; min-width: 0; }
 .admin-comment-info p { margin: 0; overflow-wrap: anywhere; }
 .admin-comments .btn--danger { align-self: flex-start; }
+
+/* Shown when the spam filter rejects a comment, so a false positive isn't
+   a silent failure for the person who wrote it. */
+.notice {
+  background: var(--warn-soft);
+  border: 1px solid var(--warn);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+.notice p { margin: 0; font-size: 0.9rem; color: var(--ink); }

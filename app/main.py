@@ -75,7 +75,12 @@ def index(request: Request, db: Session = Depends(get_session)):
     return templates.TemplateResponse(
         request,
         "index.html",
-        {"posts": posts, "status": status, "is_admin": auth.is_admin(request)},
+        {
+            "posts": posts,
+            "status": status,
+            "is_admin": auth.is_admin(request),
+            "blocked": request.query_params.get("blocked") == "1",
+        },
     )
 
 
@@ -121,12 +126,12 @@ def add_comment(
     if not (post and author and body) or website:
         return RedirectResponse(f"/#post-{post_id}", status_code=303)
 
-    # SEO/marketing bots found the site. Drop their pitches on arrival; the
-    # sender sees the same redirect either way, so there's nothing to probe.
+    # SEO/marketing bots found the site. Bots get a plain redirect and learn
+    # nothing; a human gets told, so a false positive isn't a silent failure.
     is_spam, reason = spam_filter.check(author, body)
     if is_spam:
         print(f"[spam blocked] {author!r} ({reason}): {body[:80]!r}", flush=True)
-        return RedirectResponse(f"/#post-{post_id}", status_code=303)
+        return RedirectResponse(f"/?blocked=1#post-{post_id}", status_code=303)
 
     db.add(Comment(post_id=post.id, author=author, body=body))
     db.commit()

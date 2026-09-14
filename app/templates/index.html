@@ -7,6 +7,13 @@
   <p class="status-detail">{{ status.detail }}</p>
 </section>
 
+{% if blocked %}
+<section class="notice">
+  <p><strong>That comment didn't post.</strong> It looked like advertising to our spam filter —
+    usually a web address sets it off. Try again without the link, or text Jon and he'll sort it out.</p>
+</section>
+{% endif %}
+
 {% if not posts %}
 <section class="empty">
   <p>No dispatches yet. The tour of duty hasn't begun.</p>
@@ -117,10 +124,10 @@
       <summary>Leave a comment / demand further proof</summary>
       <form method="post" action="/posts/{{ post.id }}/comments" class="stack comment-form">
         <label>Your name
-          <input type="text" name="author" maxlength="60" required placeholder="e.g., Dad">
+          <input type="text" name="author" maxlength="60" required placeholder="Your name">
         </label>
         <label>Comment
-          <textarea name="body" rows="3" maxlength="1000" required placeholder="State your concern."></textarea>
+          <textarea name="body" rows="3" maxlength="1000" required placeholder="Say something nice about Maisie (or express concern)"></textarea>
         </label>
         <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="emoji-row" aria-label="Quick emoji">

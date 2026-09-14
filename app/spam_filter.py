@@ -43,6 +43,9 @@ SPAM_TERMS = [
     "client base", "customer base", "revenue", "sales team",
 ]
 
+# Mentioning the site by name is what family does, not what spammers do.
+OWN_DOMAIN = re.compile(r"\bis\s?maisie\s?alive\.(?:org|net|com)\b", re.I)
+
 # Individually damning patterns: a single hit is enough.
 HARD_PATTERNS = [
     (re.compile(r"https?://|www\.\w|\w+\.(?:com|net|org|io|biz|ru|cn)\b", re.I), "link"),
@@ -76,6 +79,9 @@ def _normalize(text: str) -> str:
 def check(author: str, body: str) -> tuple[bool, str]:
     """Return (is_spam, reason). Reason is empty when the comment is clean."""
     haystack = _normalize(f"{author} {body}")
+    # Drop self-references before link detection so "I love ismaisiealive.org"
+    # from a relative isn't mistaken for a spammer dropping a URL.
+    haystack = OWN_DOMAIN.sub(" this site ", haystack)
 
     for pattern, label in HARD_PATTERNS:
         if pattern.search(haystack):
