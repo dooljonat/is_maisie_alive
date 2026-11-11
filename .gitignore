@@ -3,3 +3,37 @@ __pycache__/
 *.pyc
 .env
 data/
+
+# Python
+*.py[cod]
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node / frontend builds
+node_modules/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+
+# Secrets / env (keep the example files)
+.env.*
+!.env.example
+
+# Local databases & logs
+*.db
+*.sqlite3
+*.log
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
